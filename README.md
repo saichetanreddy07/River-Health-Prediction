@@ -30,11 +30,8 @@ Industrial activities can significantly affect river water quality. This project
 ├── river_health_preprocessed.csv     # Preprocessed dataset (ready for ML models)
 ├── requirements.txt                  # Python dependencies
 ├── README.md                         # Project documentation
-└── notebooks/
-    ├── LSTM_Model.ipynb              # LSTM model training and evaluation
-    ├── ANN_Model.ipynb               # ANN model training and evaluation
-    └── Preprocessing.ipynb           # Data cleaning, scaling, and feature encoding
-```
+└── main.ipynb
+
 
 ---
 
@@ -139,11 +136,7 @@ Confidence: 87.4%
 ## 👨‍💻 Author
 
 **Sai Chetan Reddy**  
-🔗 [GitHub](https://github.com/<your-username>)  
+🔗 [GitHub](https://github.com/saichetanreddy07)  
 💼 Data Science & AI | IoT-Driven Environmental Analytics  
 
 ---
-
-## 🪪 License
-
-This project is licensed under the **MIT License** — feel free to use and modify it for educational and research purposes.
