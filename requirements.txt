@@ -1,0 +1,17 @@
+# Core dependencies
+pandas==2.2.2
+numpy==1.26.4
+faker==25.2.0
+scikit-learn==1.5.2
+tensorflow==2.16.1
+keras==3.3.3
+
+# Visualization & EDA
+matplotlib==3.9.2
+seaborn==0.13.2
+
+# Model deployment (optional)
+streamlit==1.38.0
+
+# Utility & preprocessing
+joblib==1.4.2
