@@ -6,82 +6,125 @@ from datetime import timedelta
 
 fake = Faker()
 
-BASE_PARAMS = {
-    'chemical': {'pH_base': 5.5, 'nitrate_base': 15.0, 'temp_base': 22.0},
-    'textile': {'pH_base': 7.5, 'nitrate_base': 10.0, 'temp_base': 28.0},
-    'food_processing': {'pH_base': 6.8, 'nitrate_base': 5.0, 'temp_base': 18.0}
-}
-POLLUTION_EFFECTS = {
-    'chemical': {'pH_delta': [-2.5, 2.5], 'nitrate_mult': [3.0, 7.0]},
-    'textile': {'pH_delta': [-1.0, 1.0], 'nitrate_mult': [2.0, 5.0]},
-    'food_processing': {'pH_delta': [-0.5, 0.5], 'nitrate_mult': [1.5, 3.0]}
+base_values = {
+    "chemical":       {"pH": 5.5, "nitrate": 15, "temp": 22, "turbidity": 10, "do": 7,  "conductivity": 300},
+    "textile":        {"pH": 7.5, "nitrate": 10, "temp": 28, "turbidity": 20, "do": 6.5, "conductivity": 500},
+    "food_processing":{"pH": 6.8, "nitrate": 5,  "temp": 18, "turbidity": 5,  "do": 8,   "conductivity": 150}
 }
 
-def generate_row(timestamp, factory_id, industry_type, pollution_flag, season):
-    params = BASE_PARAMS[industry_type]
+pollution_effect = {
+    "chemical":       {"pH": (-2.5, 2.5), "nitrate": (3, 7),   "turbidity": (2, 5),  "do": (-3, -1),   "conductivity": (1.5, 3)},
+    "textile":        {"pH": (-1, 1),     "nitrate": (2, 5),   "turbidity": (1.5, 3),"do": (-2, -0.5), "conductivity": (1.2, 2.5)},
+    "food_processing":{"pH": (-0.5, 0.5), "nitrate": (1.5, 3), "turbidity": (1.2, 2),"do": (-1, 0),    "conductivity": (1.1, 1.8)}
+}
 
-    pH = np.clip(params['pH_base'] + np.random.normal(0, 0.2), 4.0, 9.0)
-    nitrate = np.clip(params['nitrate_base'] + np.random.normal(0, 1.5), 0, 80)
+def calculate_wqi(pH, DO, nitrate, turbidity, temp):
+    pH_score = max(0, 100 - abs(pH - 7) * 15)
+    do_score = np.clip((DO - 4) * 25, 0, 100)
+    nitrate_score = max(0, 100 - nitrate * 5)
+    turbidity_score = max(0, 100 - turbidity * 4)
+    score = (
+        do_score * 0.40 +
+        pH_score * 0.25 +
+        nitrate_score * 0.20 +
+        turbidity_score * 0.15
+    )
+    return round(np.clip(score, 0, 100), 2)
 
-    temp_variation = {'winter': -5, 'spring': 0, 'summer': 5, 'autumn': 0}[season]
-    temp = np.clip(params['temp_base'] + temp_variation + np.random.normal(0, 1.0), 10.0, 35.0)
+def create_record(time, factory, industry, is_polluted, season):
+    vals = base_values[industry]
 
-    if pollution_flag == 1:
-        effects = POLLUTION_EFFECTS[industry_type]
-        pH += np.random.uniform(*effects['pH_delta'])
-        nitrate *= np.random.uniform(*effects['nitrate_mult'])
+    pH = vals["pH"] + np.random.normal(0, 0.2)
+    nitrate = vals["nitrate"] + np.random.normal(0, 1.5)
+    turbidity = vals["turbidity"] + np.random.normal(0, 3)
+    temp_base = vals["temp"] + {"winter": -5, "spring": 0, "summer": 5, "autumn": 0}[season]
+    water_temp = temp_base + np.random.normal(0, 1)
+    do_base = vals["do"] + (0.5 if season in ["winter", "spring"] else -0.5)
+    DO = do_base + np.random.normal(0, 0.5)
+    conductivity = vals["conductivity"] + np.random.normal(0, 50)
+
+    if is_polluted:
+        eff = pollution_effect[industry]
+        pH += np.random.uniform(*eff["pH"])
+        nitrate *= np.random.uniform(*eff["nitrate"])
+        turbidity *= np.random.uniform(*eff["turbidity"])
+        DO += np.random.uniform(*eff["do"])
+        conductivity *= np.random.uniform(*eff["conductivity"])
     else:
         pH += np.random.uniform(-0.1, 0.1)
-        nitrate += np.random.uniform(0.1, 1.0)
+        nitrate += np.random.uniform(0.1, 1)
+        turbidity += np.random.uniform(0.1, 2)
+        DO += np.random.uniform(-0.1, 0.1)
+        conductivity += np.random.uniform(1, 5)
+
+    pH = np.clip(pH, 3, 10)
+    nitrate = np.clip(nitrate, 0, 100)
+    turbidity = np.clip(turbidity, 0, 150)
+    DO = np.clip(DO, 0, 14)
+    conductivity = np.clip(conductivity, 50, 2000)
+    water_temp = np.clip(water_temp, 5, 40)
 
     if random.random() < 0.07: pH = np.nan
     if random.random() < 0.07: nitrate = np.nan
-    if random.random() < 0.07: temp = np.nan
+    if random.random() < 0.07: water_temp = np.nan
+    if random.random() < 0.07: turbidity = np.nan
+    if random.random() < 0.07: DO = np.nan
+    if random.random() < 0.07: conductivity = np.nan
 
-    pH = np.clip(pH, 3.0, 10.0)
-    nitrate = np.clip(nitrate, 0.0, 100.0)
-    temp = np.clip(temp, 5.0, 40.0)
+    if any(np.isnan([pH, DO, nitrate, turbidity, water_temp])):
+        wqi = np.nan
+    else:
+        wqi = calculate_wqi(pH, DO, nitrate, turbidity, water_temp)
 
     return {
-        'Timestamp': timestamp,
-        'Factory_ID': factory_id,
-        'Industry_Type': industry_type,
-        'pH': round(pH, 2),
-        'Nitrate_Concentration': round(nitrate, 2),
-        'Temperature': round(temp, 2),
-        'Pollution_Flag': pollution_flag
+        "Timestamp": time,
+        "Factory_ID": factory,
+        "Industry_Type": industry,
+        "pH": round(pH, 2),
+        "Turbidity": round(turbidity, 2),
+        "Dissolved_Oxygen": round(DO, 2),
+        "Water_Temperature": round(water_temp, 2),
+        "Conductivity": round(conductivity, 2),
+        "Nitrate": round(nitrate, 2),
+        "Water_Quality_Index": wqi,
+        "Pollution_Flag": is_polluted
     }
 
-def generate_synthetic_dataset(num_samples=10000):
-    start_date = pd.to_datetime('2023-01-01 00:00:00')
+def generate_dataset(n=10000):
+    start = pd.to_datetime("2023-01-01 00:00:00")
     data = []
-    factory_ids = [fake.uuid4() for _ in range(10)]
-    industry_types = list(BASE_PARAMS.keys())
 
-    for i in range(num_samples):
-        timestamp = start_date + timedelta(hours=i)
+    factories = [fake.uuid4() for _ in range(5)]
+    industries = list(base_values.keys())
 
-        month = timestamp.month
-        if 3 <= month <= 5: season = 'spring'
-        elif 6 <= month <= 8: season = 'summer'
-        elif 9 <= month <= 11: season = 'autumn'
-        else: season = 'winter'
+    for i in range(n):
+        time = start + timedelta(hours=i)
 
-        factory_id = random.choice(factory_ids)
-        industry_type = random.choice(industry_types)
+        month = time.month
+        if 3 <= month <= 5:
+            season = "spring"
+        elif 6 <= month <= 8:
+            season = "summer"
+        elif 9 <= month <= 11:
+            season = "autumn"
+        else:
+            season = "winter"
 
-        pollution_prob = 0.15
-        if industry_type == 'chemical': pollution_prob = 0.2
-        pollution_flag = 1 if random.random() < pollution_prob else 0
-        row = generate_row(timestamp, factory_id, industry_type, pollution_flag, season)
-        data.append(row)
+        factory = random.choice(factories)
+        industry = random.choice(industries)
+
+        prob = 0.20 if industry == "chemical" else 0.15
+        polluted = 1 if random.random() < prob else 0
+
+        entry = create_record(time, factory, industry, polluted, season)
+        data.append(entry)
 
     df = pd.DataFrame(data)
-    df = df.set_index('Timestamp').sort_index()
+    df = df.set_index("Timestamp").sort_index()
     return df
 
-df_synthetic = generate_synthetic_dataset()
-df_synthetic.to_csv('synthetic_river_health_data.csv')
-print("Synthetic dataset generated and saved to 'synthetic_river_health_data.csv'")
-print(df_synthetic.head())
+df = generate_dataset()
+df.to_csv("synthetic_river_health_data.csv")
 
+print("Synthetic dataset saved as synthetic_river_health_data.csv")
+print(df.head())
