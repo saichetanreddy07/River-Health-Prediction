@@ -57,15 +57,19 @@ This will create a file named `synthetic_river_health_data.csv` in the root fold
 
 ## 🧬 Dataset Description
 
-| Column Name           | Description |
-|------------------------|-------------|
-| **Timestamp**          | Timestamp of the reading (hourly intervals) |
-| **Factory_ID**         | Unique ID for each factory |
-| **Industry_Type**      | Type of factory (chemical, textile, food_processing) |
-| **pH**                 | Water acidity/basicity (range 3–10) |
-| **Nitrate_Concentration** | Concentration of nitrates in mg/L (0–100) |
-| **Temperature**        | Water temperature in °C (5–40) |
-| **Pollution_Flag**     | Target variable (1 = Polluted, 0 = Clean) |
+| Column Name           | Description                                                    |
+|-----------------------|----------------------------------------------------------------|
+| Timestamp             | Timestamp of the reading (hourly intervals)                    |
+| Factory_ID            | Unique ID for each factory                                     |
+| Industry_Type         | Type of factory (chemical, textile, food_processing)          |
+| pH                    | Water acidity/basicity (range 3–10)                            |
+| Nitrate               | Concentration of nitrates in mg/L (0–100)                      |
+| Water_Temperature     | Water temperature in °C (5–40), renamed from Temperature       |
+| Turbidity             | Water clarity; indicator of suspended solids (NTU 0–150)       |
+| Dissolved_Oxygen (DO) | Critical indicator of water health in mg/L (0–14)              |
+| Conductivity          | Concentration of dissolved salts and ions (µS/cm 0–2000)       |
+| Pollution_Flag        | Target variable (1 = Polluted, 0 = Clean)                      |
+
 
 
 ---
@@ -87,25 +91,35 @@ This will create a file named `synthetic_river_health_data.csv` in the root fold
 Predict pollution probability based on new sensor readings:
 ```python
 from model import predict_custom
-
-result = predict_custom("chemical", pH=6.2, nitrate=42.5, temperature=30.0)
+result = predict_custom(
+    industry="chemical",
+    pH=5.8,
+    nitrate=65.0,
+    water_temperature=28.5,
+    turbidity=80.0,
+    dissolved_oxygen=4.5,
+    conductivity=1200.0
+)
 print(result)
+
 ```
 
 Output:
 ```
 Predicted Pollution Flag: 1 (Polluted)
-Confidence: 87.4%
+Confidence: 97.1%
 ```
 
 ---
 
 ## 📊 Example Visualization
 
-- pH vs Nitrate Concentration
+- Correlation Heatmap of 7 Water Quality Parameters
+- pH vs Water Temperature by Pollution Status
 - Pollution Trends across Industries
-- Model Performance (Accuracy, F1-score)
+- Model Performance Comparison (Accuracy, F1-score)
 - AUC Curves for Classification Models
+
 
 ---
 
