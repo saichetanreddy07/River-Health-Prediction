@@ -37,7 +37,7 @@ Industrial activities can significantly affect river water quality. This project
 
 ### 1️⃣ Clone the repository
 ```bash
-git clone https://github.com/<your-username>/River-Health-Prediction.git
+git clone https://github.com/saichetanreddy07/River-Health-Prediction.git
 cd River-Health-Prediction
 ```
 
