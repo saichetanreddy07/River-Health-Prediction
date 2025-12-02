@@ -1,23 +1,21 @@
 # 🌊 River Health Monitoring & Pollution Prediction using AI
 
-This project simulates and analyzes **river health** based on industrial waste impact using **synthetic IoT-style environmental data**. It focuses on **data preprocessing**, **machine learning modeling**, and **AI-driven pollution flag prediction**.
+This project simulates and analyzes river health based on industrial waste impact using synthetic IoT-style environmental data. It focuses on data preprocessing, machine learning modeling using an expanded seven-feature set, and AI-driven pollution flag prediction.
 
 ---
 
 ## 🚀 Overview
 
-Industrial activities can significantly affect river water quality. This project generates synthetic data mimicking IoT sensor readings (like pH, nitrate concentration, and temperature) from different factory industries — and predicts whether a given reading indicates **pollution** or **healthy conditions**.
+Industrial activities can significantly affect river water quality. This project generates synthetic data mimicking IoT sensor readings from different factory industries, incorporating six critical water quality metrics: *pH*, *Nitrate*, *Water Temperature*, *Turbidity*, *Dissolved Oxygen (DO)*, and *Conductivity*. The core objective is to accurately predict whether a given reading indicates pollution or healthy conditions using advanced classification models.
 
 ---
 
 ## 🧠 Features
 
-- 🧩 **Synthetic Dataset Generation** using realistic environmental and industrial parameters  
-- 🧼 **Data Preprocessing** for handling missing values, scaling, and encoding  
-- 🤖 **Machine Learning Models** (ANN, LSTM) for **pollution flag prediction**  
+- 🧩 **Synthetic Dataset Generation** using realistic environmental and industrial parameters for 7 features.  
+- 🧼 **Data Preprocessing** for handling missing values, scaling, and encoding the expanded feature set.  
+- 🤖 **Machine Learning Models** (Random Forest, MLP, LSTM) for high-accuracy **pollution flag prediction**.  
 - 📊 **Evaluation Metrics** including Accuracy, Precision, Recall, and F1-Score  
-- 🌐 **Streamlit Frontend** (optional) for interactive prediction visualization  
-
 ---
 
 ## 📂 Repository Structure
@@ -68,6 +66,7 @@ This will create a file named `synthetic_river_health_data.csv` in the root fold
 | **Nitrate_Concentration** | Concentration of nitrates in mg/L (0–100) |
 | **Temperature**        | Water temperature in °C (5–40) |
 | **Pollution_Flag**     | Target variable (1 = Polluted, 0 = Clean) |
+
 
 ---
 
