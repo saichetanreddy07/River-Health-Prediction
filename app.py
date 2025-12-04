@@ -2,8 +2,9 @@ import streamlit as st
 import pandas as pd
 import joblib
 import numpy as np
+from datetime import datetime
 
-# Set page configuration for a better initial look
+# Page setup
 st.set_page_config(
     page_title="River Pollution Predictor",
     page_icon="🌊",
@@ -11,222 +12,227 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- Model Loading ---
-# Note: Ensure these file names match the output of your final training step.
+# Initialize session storage for past predictions
+if 'prediction_history' not in st.session_state:
+    st.session_state.prediction_history = []
+
+# ----------------------------
+# Load the trained model
+# ----------------------------
 MODEL_FILE = "best_model.pkl"
 SCALER_FILE = "scaler.pkl"
 ENCODER_FILE = "encoder.pkl"
 
-with st.spinner('Loading prediction model...'):
+with st.spinner('Loading the river pollution model…'):
     try:
         best_model = joblib.load(MODEL_FILE)
         scaler = joblib.load(SCALER_FILE)
         encoder = joblib.load(ENCODER_FILE)
-        model_loaded = True
+        model_ready = True
     except FileNotFoundError:
         st.error(
-            f"🚨 Model files not found. Please ensure '{MODEL_FILE}', '{SCALER_FILE}', and '{ENCODER_FILE}' are in the same directory.")
-        model_loaded = False
+            "⚠️ Model files missing. Please make sure 'best_model.pkl', 'scaler.pkl', and 'encoder.pkl' are in the same folder as this app."
+        )
+        model_ready = False
     except Exception as e:
-        st.error(f"An error occurred during model loading: {e}")
-        model_loaded = False
+        st.error(f"Something went wrong while loading the model: {e}")
+        model_ready = False
 
-if not model_loaded:
+if not model_ready:
     st.stop()
 
-# ====================================
-# --- UI/UX & BACKGROUND ENHANCEMENTS ---
-# ====================================
-
-# --- Header & Background Section ---
-st.title("💧 River Water Quality and Pollution Predictor")
+# ----------------------------
+# Introduction
+# ----------------------------
+st.title("💧 River Pollution Risk Predictor")
 st.markdown("""
-**Analyze the potential impact of industrial discharge on river ecosystems using 7 key environmental parameters.**
+Evaluate how industrial activity and water quality might affect a river’s health—using real environmental science and machine learning.
 """)
 
-with st.expander("🔬 Learn About This Predictor"):
+with st.expander("🔍 How This Tool Works"):
     st.markdown("""
-    This application uses a **Machine Learning model** (likely Random Forest or MLP) to estimate the **probability of high pollution** in a river segment. The model was trained on historical data relating **Industrial Type** and **SIX** critical water quality parameters:
+    This app uses a trained machine learning model to estimate the **likelihood of high pollution** based on:
 
-    * **pH**
-    * **Nitrate**
-    * **Water Temperature**
-    * **Turbidity**
-    * **Dissolved Oxygen (DO)**
-    * **Conductivity**
+    - The **type of nearby industry** (chemical, food processing, or textile)
+    - **Six key water quality measurements**:
+      - pH (acidity/alkalinity)
+      - Nitrate levels
+      - Water temperature
+      - Turbidity (cloudiness)
+      - Dissolved oxygen (essential for fish and insects)
+      - Conductivity (a sign of dissolved salts or pollutants)
 
-    This expanded feature set provides a much more robust risk assessment for monitoring efforts.
+    The model was built from historical water monitoring data and gives a percentage risk score—helping you prioritize which sites need closer inspection.
     """)
 
 st.markdown("---")
 
-# --- Input Area ---
-st.header("1. Enter Water Quality Parameters")
-st.info("Adjust the sliders and input fields below to simulate a scenario. Note the new features added!")
+# ----------------------------
+# User Inputs
+# ----------------------------
+st.header("1. Describe the River Site")
 
-col1, col2, col3 = st.columns(3)
+st.info("Use the controls below to reflect real or hypothetical conditions at your monitoring location.")
 
-with col1:
-    st.subheader("Industry & Acidity")
+# Split into two columns for better readability
+col_a, col_b = st.columns(2)
+
+with col_a:
+    st.subheader("🏭 Nearby Industry & Chemistry")
     industry_type = st.selectbox(
-        "🏭 Industry Type",
-        ['chemical', 'food_processing', 'textile'],
-        help="Select the dominant industrial activity near the sampling site."
+        "What kind of industry is nearby?",
+        options=['chemical', 'food_processing', 'textile'],
+        help="Choose the dominant industrial activity affecting the river."
     )
 
     ph = st.slider(
-        "🧪 pH Level (Acidity/Alkalinity)",
-        0.0, 14.0, 7.0, 0.1,
-        help="Healthy rivers are typically between 6.5 and 8.5. Extremes can indicate industrial waste."
+        "pH Level (0 = very acidic, 14 = very alkaline)",
+        min_value=0.0, max_value=14.0, value=7.0, step=0.1,
+        help="Natural rivers usually range from 6.5 to 8.5."
     )
 
-with col2:
-    st.subheader("Contaminants & Heat")
     nitrate = st.number_input(
-        "📉 Nitrate (mg/L)",
-        min_value=0.0,
-        max_value=100.0,
-        value=5.0,
-        step=0.1,
+        "Nitrate (mg/L)",
+        min_value=0.0, max_value=100.0, value=5.0, step=0.1,
         format="%.2f",
-        help="Contaminant level. High values often indicate sewage or chemical runoff."
+        help="High nitrate often comes from fertilizers, sewage, or industrial waste."
     )
 
     water_temperature = st.slider(
-        "🌡️ Water Temperature (°C)",
-        0.0, 40.0, 20.0, 0.5,
-        help="Affects dissolved oxygen and biological processes. Industrial cooling water can raise this."
+        "Water Temperature (°C)",
+        min_value=0.0, max_value=40.0, value=20.0, step=0.5,
+        help="Warmer water holds less oxygen and may indicate thermal pollution."
     )
 
-with col3:
-    st.subheader("Physical Health")
+with col_b:
+    st.subheader("💧 Physical Water Conditions")
     turbidity = st.slider(
-        "🌫️ Turbidity (NTU)",
-        0.0, 150.0, 10.0, 1.0,
-        help="A measure of water clarity. High turbidity can be caused by suspended solids from erosion or heavy discharge."
+        "Turbidity (NTU – cloudiness)",
+        min_value=0.0, max_value=150.0, value=10.0, step=1.0,
+        help="High turbidity blocks sunlight and harms aquatic plants."
     )
 
     do = st.slider(
-        "🌬️ Dissolved Oxygen (DO, mg/L)",
-        0.0, 14.0, 8.0, 0.1,
-        help="Critical for aquatic life. Low DO (below 5 mg/L) is often a sign of organic pollution."
+        "Dissolved Oxygen (mg/L)",
+        min_value=0.0, max_value=14.0, value=8.0, step=0.1,
+        help="Healthy rivers typically have >6 mg/L. Below 5 mg/L stresses aquatic life."
     )
 
     conductivity = st.slider(
-        "⚡ Conductivity (µS/cm)",
-        0.0, 2000.0, 300.0, 10.0,
-        help="Measures the water's ability to pass electric current. High conductivity often indicates high concentrations of dissolved ions/salts from industrial discharge."
+        "Conductivity (µS/cm)",
+        min_value=0.0, max_value=2000.0, value=300.0, step=10.0,
+        help="High values suggest dissolved ions—often from industrial discharge or road salt."
     )
 
 st.markdown("---")
 
-# --- Prediction & Output Area ---
-st.header("2. Get Prediction")
+# ----------------------------
+# Prediction
+# ----------------------------
+st.header("2. Get Your Risk Assessment")
 
-if st.button("🚀 Predict Pollution Risk", type="primary"):
-
-    # 1. Prepare Input Data (MATCHING THE 7 MODEL FEATURES EXACTLY)
-    input_data = pd.DataFrame({
+if st.button("🚀 Analyze Pollution Risk", type="primary"):
+    # Prepare input
+    input_df = pd.DataFrame({
         'Industry_Type': [industry_type],
         'pH': [ph],
-        'Nitrate': [nitrate],  # Renamed column
-        'Water_Temperature': [water_temperature],  # Renamed column
-        'Turbidity': [turbidity],  # New column
-        'Dissolved_Oxygen': [do],  # New column
-        'Conductivity': [conductivity]  # New column
+        'Nitrate': [nitrate],
+        'Water_Temperature': [water_temperature],
+        'Turbidity': [turbidity],
+        'Dissolved_Oxygen': [do],
+        'Conductivity': [conductivity]
     })
 
     try:
-        # 2. Preprocess
-        # Create a copy to avoid Streamlit mutability issues
-        input_processed = input_data.copy()
+        # Encode and scale
+        input_copy = input_df.copy()
+        encoded_industry = encoder.transform(input_copy[['Industry_Type']])
+        input_copy['Industry_Type'] = encoded_industry
+        scaled_input = scaler.transform(input_copy)
 
-        # Encode Industry_Type (Must be 2D array if encoder expects it)
-        try:
-            input_processed['Industry_Type'] = encoder.transform(input_processed[['Industry_Type']])
-        except ValueError:
-            # Fallback for older versions/different encoder fits
-            input_processed['Industry_Type'] = encoder.transform(input_processed['Industry_Type'])
-
-        # Scale all features (Must match the order and number of features used for scaler fit)
-        input_scaled = scaler.transform(input_processed)
-
-        # 3. Make Prediction
-        probability = None
+        # Predict
         if hasattr(best_model, 'predict_proba'):
-            # Works for Random Forest, Logistic Regression, SVM (with probability=True)
-            probability = best_model.predict_proba(input_scaled)[0, 1] * 100
-        elif hasattr(best_model, 'predict'):
-            # Works for MLP/LSTM (if they output a single value 0-1)
-            prediction_output = best_model.predict(input_scaled)
-            if prediction_output.ndim == 2 and prediction_output.shape[1] == 1:
-                probability = prediction_output[0, 0] * 100
-            else:
-                probability = prediction_output[0] * 100
+            risk_prob = best_model.predict_proba(scaled_input)[0, 1] * 100
         else:
-            st.error("The loaded model does not support probability prediction.")
+            pred = best_model.predict(scaled_input)
+            risk_prob = (pred[0] if pred.ndim == 1 else pred[0, 0]) * 100
 
     except Exception as e:
-        st.error(f"An error occurred during prediction: {e}")
-        st.error("Please check that the feature order in the input DataFrame matches the training data.")
-        probability = None
+        st.error(f"Oops—something went wrong during prediction: {e}")
+        risk_prob = None
 
-    # 4. Display Results
-    if probability is not None:
-        st.subheader("📊 Prediction Analysis")
-        st.write(f"The predicted **Probability of High Pollution** is:")
+    # Save to history
+    if risk_prob is not None:
+        now = datetime.now().strftime("%Y-%m-%d %H:%M")
+        st.session_state.prediction_history.append({
+            "Time": now,
+            "Industry": industry_type,
+            "pH": ph,
+            "Nitrate (mg/L)": nitrate,
+            "Temp (°C)": water_temperature,
+            "Turbidity (NTU)": turbidity,
+            "DO (mg/L)": do,
+            "Conductivity (µS/cm)": conductivity,
+            "Pollution Risk (%)": round(risk_prob, 2)
+        })
 
-        # Define categories and colors for visualization
-        if probability <= 20:
-            category = "Very Low Risk"
-            emoji = "✅"
-            color = "#28a745"  # Bootstrap success green
-            message = "This scenario suggests the river is likely healthy. Maintain vigilance!"
-        elif probability <= 40:
-            category = "Low Risk"
-            emoji = "👍"
-            color = "#17a2b8"  # Bootstrap info blue
-            message = "Water quality appears good, but minor factors may warrant basic monitoring."
-        elif probability <= 60:
-            category = "Moderate Risk"
-            emoji = "⚠️"
-            color = "#ffc107"  # Bootstrap warning yellow
-            message = "Pollution factors are present. Enhanced monitoring and potential mitigation steps are recommended."
-        elif probability <= 80:
-            category = "High Risk"
-            emoji = "🔥"
-            color = "#dc3545"  # Bootstrap danger red
-            message = "Significant pollution risk detected. Immediate investigation and corrective action are required."
+        # Display result
+        st.subheader("📊 Your Pollution Risk Assessment")
+
+        if risk_prob <= 20:
+            label, icon, color, advice = "Very Low Risk", "✅", "#28a745", "The river appears healthy. Keep monitoring to stay ahead of changes."
+        elif risk_prob <= 40:
+            label, icon, color, advice = "Low Risk", "👍", "#17a2b8", "Water quality is generally good, but stay alert for small changes."
+        elif risk_prob <= 60:
+            label, icon, color, advice = "Moderate Risk", "⚠️", "#ffc107", "Some warning signs are present. Consider follow-up testing or site review."
+        elif risk_prob <= 80:
+            label, icon, color, advice = "High Risk", "🔥", "#dc3545", "Strong indicators of pollution. Investigate sources and take action soon."
         else:
-            category = "Very High Risk"
-            emoji = "🛑"
-            color = "#6f42c1"  # Bootstrap dark purple/critical
-            message = "🚨 Critical risk! Pollution is highly probable. Stop discharge and initiate cleanup protocols."
+            label, icon, color, advice = "Very High Risk", "🛑", "#6f42c1", "Critical alert: pollution is highly likely. Immediate response needed."
 
-        # Use markdown with color for emphasis
+        # Highlight result
+        text_color = "black" if color in ["#ffc107", "#17a2b8"] else "white"
         st.markdown(f"""
         <div style="
             background-color: {color};
             padding: 20px;
             border-radius: 10px;
             text-align: center;
-            color: {'black' if color in ['#ffc107', '#17a2b8'] else 'white'};
-            box-shadow: 0 4px 12px 0 rgba(0,0,0,0.3);
+            color: {text_color};
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         ">
-            <h3>{emoji} {category} {emoji}</h3>
-            <h1>{probability:.2f}%</h1>
+            <h3>{icon} {label} {icon}</h3>
+            <h1>{risk_prob:.1f}%</h1>
         </div>
         """, unsafe_allow_html=True)
 
-        st.markdown(f"### Pollution Category: **{category}**")
-        st.write(message)
+        st.write(advice)
 
-        # Final action-oriented message
-        if 'Low' in category or 'Very Low' in category:
-            st.success("The river segment appears to be in good health based on the inputs.")
+        if "Low" in label:
+            st.success("✅ No immediate concerns—great work protecting this river!")
         else:
-            st.error("Action may be required! This scenario indicates a potential environmental threat.")
+            st.error(
+                "❗ This situation warrants attention. Consider notifying environmental authorities or scheduling a field test.")
 
 st.markdown("---")
+
+# ----------------------------
+# Historical Dashboard
+# ----------------------------
+st.header("3. 📊 Your Prediction History")
+
+if st.session_state.prediction_history:
+    history = pd.DataFrame(st.session_state.prediction_history)
+    history = history.sort_values("Time", ascending=False).reset_index(drop=True)
+
+    st.dataframe(history, use_container_width=True, hide_index=True)
+
+    if len(history) > 1:
+        st.subheader("Risk Over Time")
+        st.line_chart(history.set_index("Time")["Pollution Risk (%)"])
+else:
+    st.info("You haven’t run any predictions yet. Try entering some values above to get started!")
+
 st.caption(
-    "Disclaimer: This tool provides an estimate based on a predictive model and should not replace professional environmental analysis or mandatory testing.")
+    "ℹ️ Note: This tool provides an estimated risk based on a predictive model. It is not a substitute for certified water quality testing or regulatory compliance checks."
+)
