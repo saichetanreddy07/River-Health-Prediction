@@ -1,155 +1,86 @@
-# 🌊 River Health Monitoring & Pollution Prediction using AI
+# River Health Monitoring and Pollution Prediction using AI
 
-This project simulates and analyzes river health based on industrial waste impact using synthetic IoT-style environmental data. It focuses on data preprocessing, machine learning modeling using an expanded seven-feature set, and AI-driven pollution flag prediction.
+## Overview
 
----
+This project focuses on predicting river pollution levels based on industrial discharge patterns using machine learning. Since real-world multi-parameter river datasets are limited, a synthetic dataset was generated to simulate IoT-based environmental monitoring.
 
-## 🚀 Overview
-
-Industrial activities can significantly affect river water quality. This project generates synthetic data mimicking IoT sensor readings from different factory industries, incorporating six critical water quality metrics: *pH*, *Nitrate*, *Water Temperature*, *Turbidity*, *Dissolved Oxygen (DO)*, and *Conductivity*. The core objective is to accurately predict whether a given reading indicates pollution or healthy conditions using advanced classification models.
+The system uses multiple water quality indicators to classify whether a given observation represents polluted or safe conditions.
 
 ---
 
-## 🧠 Features
+## Objective
 
-- 🧩 **Synthetic Dataset Generation** using realistic environmental and industrial parameters for 7 features.  
-- 🧼 **Data Preprocessing** for handling missing values, scaling, and encoding the expanded feature set.  
-- 🤖 **Machine Learning Models** (Random Forest, MLP, LSTM) for high-accuracy **pollution flag prediction**.  
-- 📊 **Evaluation Metrics** including Accuracy, Precision, Recall, and F1-Score  
----
-
-## 📂 Repository Structure
-
-```
-📁 River-Health-Prediction/
-│
-├── synthetic_data.py                 # Script for generating synthetic industrial waste data
-├── synthetic_river_health_data.csv   # Generated synthetic dataset
-├── river_health_preprocessed.csv     # Preprocessed dataset (ready for ML models)
-├── requirements.txt                  # Python dependencies
-├── README.md                         # Project documentation
-└── main.ipynb
-
+- Simulate realistic environmental data representing industrial impact on rivers  
+- Build a machine learning pipeline for pollution detection  
+- Compare multiple models to evaluate performance  
+- Demonstrate how AI can be applied to environmental monitoring  
 
 ---
 
-## 🧰 Installation
+## Dataset
 
-### 1️⃣ Clone the repository
-```bash
-git clone https://github.com/saichetanreddy07/River-Health-Prediction.git
-cd River-Health-Prediction
-```
+The dataset represents sensor readings collected at regular intervals from different industrial sources.
 
-### 2️⃣ Install dependencies
-```bash
-pip install -r requirements.txt
-```
+**Features:**
+- pH  
+- Nitrate  
+- Water Temperature  
+- Turbidity  
+- Dissolved Oxygen (DO)  
+- Conductivity  
+- Industry Type  
 
-### 3️⃣ Generate the synthetic dataset
-```bash
-python synthetic_data.py
-```
+**Target:**
+- Pollution_Flag (1 = polluted, 0 = clean)
 
-This will create a file named `synthetic_river_health_data.csv` in the root folder.
-
----
-
-## 🧬 Dataset Description
-
-| Column Name           | Description                                                    |
-|-----------------------|----------------------------------------------------------------|
-| Timestamp             | Timestamp of the reading (hourly intervals)                    |
-| Factory_ID            | Unique ID for each factory                                     |
-| Industry_Type         | Type of factory (chemical, textile, food_processing)          |
-| pH                    | Water acidity/basicity (range 3–10)                            |
-| Nitrate               | Concentration of nitrates in mg/L (0–100)                      |
-| Water_Temperature     | Water temperature in °C (5–40), renamed from Temperature       |
-| Turbidity             | Water clarity; indicator of suspended solids (NTU 0–150)       |
-| Dissolved_Oxygen (DO) | Critical indicator of water health in mg/L (0–14)              |
-| Conductivity          | Concentration of dissolved salts and ions (µS/cm 0–2000)       |
-| Pollution_Flag        | Target variable (1 = Polluted, 0 = Clean)                      |
-
-
+**Note:**  
+The dataset is synthetically generated based on realistic environmental ranges and industrial behavior due to the lack of publicly available datasets with similar granularity.
 
 ---
 
-## 🧩 Model Workflow
+## Methodology
 
-1. **Data Generation** → Using `synthetic_data.py`
-2. **Preprocessing** → Handle missing values, normalize, and encode features
+1. **Data Generation**  
+   Synthetic data was generated using controlled ranges for each feature to reflect realistic environmental conditions.
+
+2. **Data Preprocessing**  
+   - Handling missing values  
+   - Feature scaling  
+   - Encoding categorical variables  
+
 3. **Model Training**  
-   - **ANN (Artificial Neural Network)** for basic classification  
-   - **LSTM (Long Short-Term Memory)** for temporal pattern recognition
-4. **Evaluation** → Metrics & visual performance comparison
-5. **Deployment (Optional)** → Streamlit app for live predictions
+   The following models were implemented:
+   - Random Forest  
+   - Artificial Neural Network (ANN)  
+   - LSTM (to capture temporal patterns)
+
+4. **Evaluation**  
+   Models were evaluated using:
+   - Accuracy  
+   - Precision  
+   - Recall  
+   - F1 Score  
 
 ---
 
-## 🧠 Example Use Case
+## Results
 
-Predict pollution probability based on new sensor readings:
-```python
-from model import predict_custom
-result = predict_custom(
-    industry="chemical",
-    pH=5.8,
-    nitrate=65.0,
-    water_temperature=28.5,
-    turbidity=80.0,
-    dissolved_oxygen=4.5,
-    conductivity=1200.0
-)
-print(result)
+The models were compared based on classification performance:
 
-```
+- Random Forest provided stable baseline performance  
+- ANN captured non-linear feature interactions  
+- LSTM showed improved performance by modeling temporal patterns  
 
-Output:
-```
-Predicted Pollution Flag: 1 (Polluted)
-Confidence: 97.1%
-```
+(*Add exact metrics here if available*)
 
 ---
 
-## 📊 Example Visualization
+## Key Observations
 
-- Correlation Heatmap of 7 Water Quality Parameters
-- pH vs Water Temperature by Pollution Status
-- Pollution Trends across Industries
-- Model Performance Comparison (Accuracy, F1-score)
-- AUC Curves for Classification Models
-
+- Dissolved oxygen and turbidity strongly influence pollution prediction  
+- Industrial category impacts pollution probability  
+- Tree-based models perform well on structured environmental data  
 
 ---
 
-## 🧾 Requirements
-
-- Python 3.9+
-- pandas
-- numpy
-- faker
-- scikit-learn
-- tensorflow / keras
-- matplotlib
-- seaborn
-- streamlit *(optional)*
-
----
-
-## 💡 Future Enhancements
-
-- Integration with **real IoT sensor data**
-- Predictive maintenance and anomaly detection
-- Geospatial analysis of river networks
-- Deployment on **AWS / Azure Cloud**
-
----
-
-## 👨‍💻 Author
-
-**Sai Chetan Reddy**  
-🔗 [GitHub](https://github.com/saichetanreddy07)  
-💼 Data Science & AI | IoT-Driven Environmental Analytics  
-
----
+## Project Structure
