@@ -84,3 +84,33 @@ The models were compared based on classification performance:
 ---
 
 ## Project Structure
+```
+RiverHealthPrediction/
+│
+├── app.py
+├── main.ipynb
+├── requirements.txt
+├── river_health_preprocessed.csv
+├── synthetic_river_health_data.csv
+├── synthetic_data.py
+└── README.md
+```
+
+## Tech Stack
+
+- Python  
+- Pandas, NumPy  
+- Scikit-learn  
+- TensorFlow / Keras  
+- Matplotlib, Seaborn  
+
+---
+
+## Future Work
+
+- Integration with real IoT sensor data  
+- Model explainability (e.g., SHAP)  
+- Deployment as a web application  
+- Extension to geospatial pollution monitoring  
+
+---
